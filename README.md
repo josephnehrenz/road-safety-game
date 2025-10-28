@@ -90,4 +90,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-*Built with ❤️ for the Kaggle & Stack Overflow Code Scientist Challenge*
+*Built for the Kaggle & Stack Overflow Code Scientist Challenge*
