@@ -43,10 +43,10 @@ Try the live app here:
 
 ```
 road-safety-game/
-├── app.py                 # Streamlit application
-├── requirements.txt       # Python dependencies
+├── app.py                  # Streamlit application
+├── requirements.txt        # Python dependencies
 ├── accident_risk_model.cbm # Trained CatBoost model
-└── README.md             # This file
+└── README.md               # This file
 ```
 
 ## 🏆 Challenge Information
