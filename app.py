@@ -33,6 +33,16 @@ if 'game_complete' not in st.session_state:
     st.session_state.game_complete = False
 if 'high_scores' not in st.session_state:
     st.session_state.high_scores = []  # Store multiple high scores
+if 'mistake_analysis' not in st.session_state:
+    st.session_state.mistake_analysis = {
+        'speed_limit': 0,
+        'lighting': 0,
+        'curvature': 0,
+        'weather': 0,
+        'road_type': 0,
+        'time_of_day': 0,
+        'num_lanes': 0
+    }
 
 # Load the model
 try:
@@ -83,7 +93,7 @@ def predict_risk(road_data):
     return max(0, min(1, risk))  # Ensure risk is between 0 and 1
 
 def display_road_card(road, road_name):
-    """Display road information in a card format"""
+    """Display road information in a card format - EXPANDED DETAILS"""
     with st.container():
         st.subheader(f"{road_name}")
         
@@ -99,14 +109,36 @@ def display_road_card(road, road_name):
             st.metric("Lighting", road['lighting'].title())
             st.metric("Weather", road['weather'].title())
         
-        # Additional details in expander
-        with st.expander("More details"):
-            st.write(f"**Time:** {road['time_of_day'].title()}")
-            st.write(f"**Road Signs:** {'✅ Yes' if road['road_signs_present'] else '❌ No'}")
-            st.write(f"**Public Road:** {'✅ Yes' if road['public_road'] else '❌ No'}")
-            st.write(f"**Holiday:** {'✅ Yes' if road['holiday'] else '❌ No'}")
-            st.write(f"**School Season:** {'✅ Yes' if road['school_season'] else '❌ No'}")
-            st.write(f"**Past Accidents:** {road['num_reported_accidents']}")
+        # EXPANDED DETAILS - Always show all information in order of importance
+        st.markdown("---")
+        st.write("**All Road Details:**")
+        
+        # Two columns for all details, sorted by feature importance
+        detail_col1, detail_col2 = st.columns(2)
+        
+        with detail_col1:
+            # Most important features first
+            st.write(f"**🚀 Speed Limit:** {road['speed_limit']} mph")
+            st.write(f"**💡 Lighting:** {road['lighting'].title()}")
+            st.write(f"**🌀 Curvature:** {road['curvature']:.2f}")
+            st.write(f"**🌧️ Weather:** {road['weather'].title()}")
+            
+        with detail_col2:
+            # Less important but still relevant features
+            st.write(f"**🛣️ Road Type:** {road['road_type'].title()}")
+            st.write(f"**⏰ Time of Day:** {road['time_of_day'].title()}")
+            st.write(f"**↔️ Number of Lanes:** {road['num_lanes']}")
+            st.write(f"**📊 Past Accidents:** {road['num_reported_accidents']}")
+        
+        # Additional boolean features
+        st.write("**Additional Factors:**")
+        bool_col1, bool_col2, bool_col3 = st.columns(3)
+        with bool_col1:
+            st.write(f"**🛑 Road Signs:** {'✅ Present' if road['road_signs_present'] else '❌ Not Present'}")
+            st.write(f"**🏛️ Public Road:** {'✅ Yes' if road['public_road'] else '❌ No'}")
+        with bool_col2:
+            st.write(f"**🎄 Holiday:** {'✅ Yes' if road['holiday'] else '❌ No'}")
+            st.write(f"**🏫 School Season:** {'✅ Yes' if road['school_season'] else '❌ No'}")
 
 def show_risk_scores():
     """Display the actual risk scores"""
@@ -120,20 +152,24 @@ def show_risk_scores():
     road1 = st.session_state.current_roads['road1']
     road2 = st.session_state.current_roads['road2']
     
-    # Compare key features
+    # Compare key features (ordered by importance)
     if road1['speed_limit'] != road2['speed_limit']:
-        factors.append(f"Speed limit ({road1['speed_limit']} vs {road2['speed_limit']} mph)")
+        factors.append(f"🚀 Speed limit ({road1['speed_limit']} vs {road2['speed_limit']} mph)")
     if road1['lighting'] != road2['lighting']:
-        factors.append(f"Lighting ({road1['lighting']} vs {road2['lighting']})")
+        factors.append(f"💡 Lighting ({road1['lighting']} vs {road2['lighting']})")
     if road1['weather'] != road2['weather']:
-        factors.append(f"Weather ({road1['weather']} vs {road2['weather']})")
+        factors.append(f"🌧️ Weather ({road1['weather']} vs {road2['weather']})")
     if road1['curvature'] != road2['curvature']:
-        factors.append(f"Curvature ({road1['curvature']:.2f} vs {road2['curvature']:.2f})")
+        factors.append(f"🌀 Curvature ({road1['curvature']:.2f} vs {road2['curvature']:.2f})")
     if road1['road_type'] != road2['road_type']:
-        factors.append(f"Road type ({road1['road_type']} vs {road2['road_type']})")
+        factors.append(f"🛣️ Road type ({road1['road_type']} vs {road2['road_type']})")
+    if road1['time_of_day'] != road2['time_of_day']:
+        factors.append(f"⏰ Time ({road1['time_of_day']} vs {road2['time_of_day']})")
+    if road1['num_lanes'] != road2['num_lanes']:
+        factors.append(f"↔️ Lanes ({road1['num_lanes']} vs {road2['num_lanes']})")
     
     if factors:
-        for factor in factors[:4]:  # Show top 4 factors
+        for factor in factors:
             st.write(f"• {factor}")
 
 def create_progress_chart():
@@ -209,6 +245,99 @@ def create_score_gauge():
     
     fig.update_layout(height=300)
     return fig
+
+def update_mistake_analysis(road1, road2, user_choice_correct):
+    """Analyze which factors might have caused mistakes"""
+    if user_choice_correct:
+        return  # Don't analyze correct choices
+    
+    # Check which important features were different between the roads
+    if road1['speed_limit'] != road2['speed_limit']:
+        st.session_state.mistake_analysis['speed_limit'] += 1
+    if road1['lighting'] != road2['lighting']:
+        st.session_state.mistake_analysis['lighting'] += 1
+    if road1['curvature'] != road2['curvature']:
+        st.session_state.mistake_analysis['curvature'] += 1
+    if road1['weather'] != road2['weather']:
+        st.session_state.mistake_analysis['weather'] += 1
+    if road1['road_type'] != road2['road_type']:
+        st.session_state.mistake_analysis['road_type'] += 1
+    if road1['time_of_day'] != road2['time_of_day']:
+        st.session_state.mistake_analysis['time_of_day'] += 1
+    if road1['num_lanes'] != road2['num_lanes']:
+        st.session_state.mistake_analysis['num_lanes'] += 1
+
+def create_mistake_analysis_chart():
+    """Create a chart showing which factors caused the most mistakes"""
+    if sum(st.session_state.mistake_analysis.values()) == 0:
+        return None
+    
+    # Prepare data for plotting
+    factors = list(st.session_state.mistake_analysis.keys())
+    counts = list(st.session_state.mistake_analysis.values())
+    
+    # Create human-readable labels with emojis
+    factor_labels = {
+        'speed_limit': '🚀 Speed Limit',
+        'lighting': '💡 Lighting',
+        'curvature': '🌀 Curvature',
+        'weather': '🌧️ Weather',
+        'road_type': '🛣️ Road Type',
+        'time_of_day': '⏰ Time of Day',
+        'num_lanes': '↔️ Number of Lanes'
+    }
+    
+    readable_factors = [factor_labels[factor] for factor in factors]
+    
+    fig = px.bar(
+        x=counts,
+        y=readable_factors,
+        orientation='h',
+        title="📊 Factors That Challenged You Most",
+        labels={'x': 'Number of Mistakes', 'y': 'Road Features'},
+        color=counts,
+        color_continuous_scale='Reds'
+    )
+    
+    fig.update_layout(
+        height=300,
+        showlegend=False,
+        xaxis=dict(range=[0, max(counts) + 1])
+    )
+    
+    # Add count labels on bars
+    fig.update_traces(
+        texttemplate='%{x}',
+        textposition='outside'
+    )
+    
+    return fig
+
+def get_improvement_tips():
+    """Generate personalized improvement tips based on mistake analysis"""
+    if sum(st.session_state.mistake_analysis.values()) == 0:
+        return ["Great job! You didn't make any consistent mistakes."]
+    
+    # Find the top 2-3 factors with most mistakes
+    sorted_factors = sorted(st.session_state.mistake_analysis.items(), 
+                          key=lambda x: x[1], reverse=True)
+    
+    tips = []
+    tip_messages = {
+        'speed_limit': "**🚀 Focus on Speed Limits**: Higher speeds dramatically increase accident risk. Even small speed differences (10-15 mph) can significantly impact safety.",
+        'lighting': "**💡 Pay Attention to Lighting**: Poor visibility (dark, dim) is a major risk factor. Daylight is always safer than nighttime driving.",
+        'curvature': "**🌀 Consider Road Curvature**: Sharper curves (above 0.5) are much more dangerous, especially at higher speeds.",
+        'weather': "**🌧️ Weather Matters**: Rain, fog, and snow can double or triple accident risk compared to clear conditions.",
+        'road_type': "**🛣️ Understand Road Types**: Highways are generally safer than rural roads, which are safer than complex urban environments.",
+        'time_of_day': "**⏰ Time Affects Safety**: Nighttime driving is riskier than daytime. Rush hours can also increase urban road risks.",
+        'num_lanes': "**↔️ Lane Complexity**: More lanes can mean more complex driving situations and potential conflict points."
+    }
+    
+    for factor, count in sorted_factors[:3]:  # Top 3 factors
+        if count > 0:
+            tips.append(tip_messages.get(factor, ""))
+    
+    return tips
 
 def update_high_scores():
     """Update high scores with current game result"""
@@ -286,7 +415,23 @@ if st.session_state.game_complete:
     st.balloons()
     st.success("🎉 Congratulations! You've completed the 10-question challenge!")
     
+    # Show improvement analysis at the TOP
+    mistake_chart = create_mistake_analysis_chart()
+    improvement_tips = get_improvement_tips()
+    
+    if mistake_chart:
+        st.subheader("📈 Your Learning Analysis")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.plotly_chart(mistake_chart, use_container_width=True, key="mistake_chart")
+        with col2:
+            st.subheader("💡 Tips for Improvement")
+            for tip in improvement_tips:
+                st.write(tip)
+                st.write("")
+    
     # Show final results
+    st.subheader("🎯 Final Score")
     col1, col2 = st.columns(2)
     with col1:
         # Use unique key to avoid duplicate element error
@@ -319,11 +464,13 @@ if st.session_state.game_complete:
         st.session_state.game_history = []
         st.session_state.game_complete = False
         st.session_state.current_roads = None
+        st.session_state.mistake_analysis = {key: 0 for key in st.session_state.mistake_analysis}
         st.rerun()
 
-# Generate new roads button (only if game not complete)
+# Generate new roads button (only if game not complete) - CHANGED TO BLUE
 if not st.session_state.game_complete:
-    if st.button("🎲 Generate New Road Scenarios", type="primary", use_container_width=True) or st.session_state.current_roads is None:
+    if st.button("🎲 Generate New Road Scenarios", type="primary", use_container_width=True, 
+                help="Click to get two new random road scenarios to compare") or st.session_state.current_roads is None:
         road1 = generate_random_road()
         road2 = generate_random_road()
         
@@ -366,6 +513,12 @@ if st.session_state.current_roads and not st.session_state.game_complete:
             st.success(f"🎉 Correct! {chosen_road} is safer!")
         else:
             st.error(f"😞 Incorrect! The other road is safer.")
+            # Analyze mistake
+            update_mistake_analysis(
+                st.session_state.current_roads['road1'],
+                st.session_state.current_roads['road2'],
+                is_correct
+            )
         
         # Record game history
         st.session_state.game_history.append(is_correct)
@@ -435,6 +588,7 @@ if st.session_state.total_questions > 0 and not st.session_state.game_complete:
         st.session_state.game_history = []
         st.session_state.game_complete = False
         st.session_state.current_roads = None
+        st.session_state.mistake_analysis = {key: 0 for key in st.session_state.mistake_analysis}
         st.rerun()
 
 # Educational section - TWO COLUMN LAYOUT
