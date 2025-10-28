@@ -93,7 +93,7 @@ def predict_risk(road_data):
     return max(0, min(1, risk))  # Ensure risk is between 0 and 1
 
 def display_road_card(road, road_name):
-    """Display road information in a card format - EXPANDED DETAILS"""
+    """Display road information in a card format - CLEANER LAYOUT"""
     with st.container():
         st.subheader(f"{road_name}")
         
@@ -109,34 +109,18 @@ def display_road_card(road, road_name):
             st.metric("Lighting", road['lighting'].title())
             st.metric("Weather", road['weather'].title())
         
-        # EXPANDED DETAILS - Always show all information in order of importance
         st.markdown("---")
-        st.write("**All Road Details:**")
         
-        # Two columns for all details, sorted by feature importance
+        # ALL ROAD DETAILS - Clean single section without subheadings
         detail_col1, detail_col2 = st.columns(2)
         
         with detail_col1:
-            # Most important features first
-            st.write(f"**🚀 Speed Limit:** {road['speed_limit']} mph")
-            st.write(f"**💡 Lighting:** {road['lighting'].title()}")
-            st.write(f"**🌀 Curvature:** {road['curvature']:.2f}")
-            st.write(f"**🌧️ Weather:** {road['weather'].title()}")
-            
-        with detail_col2:
-            # Less important but still relevant features
-            st.write(f"**🛣️ Road Type:** {road['road_type'].title()}")
             st.write(f"**⏰ Time of Day:** {road['time_of_day'].title()}")
-            st.write(f"**↔️ Number of Lanes:** {road['num_lanes']}")
-            st.write(f"**📊 Past Accidents:** {road['num_reported_accidents']}")
-        
-        # Additional boolean features
-        st.write("**Additional Factors:**")
-        bool_col1, bool_col2, bool_col3 = st.columns(3)
-        with bool_col1:
             st.write(f"**🛑 Road Signs:** {'✅ Present' if road['road_signs_present'] else '❌ Not Present'}")
             st.write(f"**🏛️ Public Road:** {'✅ Yes' if road['public_road'] else '❌ No'}")
-        with bool_col2:
+            st.write(f"**📊 Past Accidents:** {road['num_reported_accidents']}")
+            
+        with detail_col2:
             st.write(f"**🎄 Holiday:** {'✅ Yes' if road['holiday'] else '❌ No'}")
             st.write(f"**🏫 School Season:** {'✅ Yes' if road['school_season'] else '❌ No'}")
 
@@ -324,13 +308,13 @@ def get_improvement_tips():
     
     tips = []
     tip_messages = {
-        'speed_limit': "**🚀 Focus on Speed Limits**: Higher speeds dramatically increase accident risk. Even small speed differences (10-15 mph) can significantly impact safety.",
-        'lighting': "**💡 Pay Attention to Lighting**: Poor visibility (dark, dim) is a major risk factor. Daylight is always safer than nighttime driving.",
-        'curvature': "**🌀 Consider Road Curvature**: Sharper curves (above 0.5) are much more dangerous, especially at higher speeds.",
-        'weather': "**🌧️ Weather Matters**: Rain, fog, and snow can double or triple accident risk compared to clear conditions.",
-        'road_type': "**🛣️ Understand Road Types**: Highways are generally safer than rural roads, which are safer than complex urban environments.",
-        'time_of_day': "**⏰ Time Affects Safety**: Nighttime driving is riskier than daytime. Rush hours can also increase urban road risks.",
-        'num_lanes': "**↔️ Lane Complexity**: More lanes can mean more complex driving situations and potential conflict points."
+        'speed_limit': "**🚀 Speed Limits**: Higher speeds dramatically increase accident risk.",
+        'lighting': "**💡 Lighting**: Poor visibility is a major risk factor.",
+        'curvature': "**🌀 Curvature**: Sharper curves are much more dangerous.",
+        'weather': "**🌧️ Weather**: Rain/fog/snow can triple accident risk.",
+        'road_type': "**🛣️ Road Types**: Highways > rural > urban for safety.",
+        'time_of_day': "**⏰ Time**: Nighttime driving is riskier than daytime.",
+        'num_lanes': "**↔️ Lanes**: More lanes can mean more complex driving."
     }
     
     for factor, count in sorted_factors[:3]:  # Top 3 factors
@@ -428,7 +412,6 @@ if st.session_state.game_complete:
             st.subheader("💡 Tips for Improvement")
             for tip in improvement_tips:
                 st.write(tip)
-                st.write("")
     
     # Show final results
     st.subheader("🎯 Final Score")
@@ -591,7 +574,7 @@ if st.session_state.total_questions > 0 and not st.session_state.game_complete:
         st.session_state.mistake_analysis = {key: 0 for key in st.session_state.mistake_analysis}
         st.rerun()
 
-# Educational section - TWO COLUMN LAYOUT
+# Educational section - TWO COLUMN LAYOUT (BALANCED 6 & 6)
 st.markdown("---")
 st.header("💡 Did You Know?")
 
@@ -605,7 +588,7 @@ with col1:
     3. **Road Curvature** 🌀 - Sharper curves = more dangerous
     4. **Weather** 🌧️ - Rain, fog, snow increase accident risk
     5. **Road Type** 🛣️ - Highway vs urban vs rural differences
-    6. **Number of Lanes** ↔️ - More lanes can mean more complexity
+    6. **Time of Day** ⏰ - Nighttime driving increases risk
     """)
 
 with col2:
@@ -617,7 +600,6 @@ with col2:
     - **Stay alert** for road signs and changing conditions
     - **Plan ahead** for holiday travel and school zones
     - **Maintain focus** - avoid distractions while driving
-    - **Keep distance** - leave space for unexpected situations
     """)
 
 # Footer
