@@ -10,7 +10,7 @@ import plotly.express as px
 st.set_page_config(
     page_title="Road Safety Game",
     page_icon="🚗",
-    layout="wide"  # Changed from "centered" to "wide"
+    layout="wide"
 )
 
 # Load model
@@ -31,6 +31,8 @@ if 'game_history' not in st.session_state:
     st.session_state.game_history = []
 if 'game_complete' not in st.session_state:
     st.session_state.game_complete = False
+if 'high_scores' not in st.session_state:
+    st.session_state.high_scores = []  # Store multiple high scores
 
 # Load the model
 try:
@@ -135,14 +137,14 @@ def show_risk_scores():
             st.write(f"• {factor}")
 
 def create_progress_chart():
-    """Create a progress chart showing score over time"""
+    """Create a progress chart showing accuracy over time - FIXED VERSION"""
     if len(st.session_state.game_history) == 0:
         return None
     
-    # Create cumulative accuracy data
+    # FIXED: Calculate cumulative accuracy correctly
     questions = list(range(1, len(st.session_state.game_history) + 1))
     cumulative_correct = np.cumsum([1 if correct else 0 for correct in st.session_state.game_history])
-    cumulative_accuracy = [correct / (i + 1) * 100 for i, correct in enumerate(st.session_state.game_history)]
+    cumulative_accuracy = [(cumulative_correct[i] / (i + 1)) * 100 for i in range(len(cumulative_correct))]
     
     fig = go.Figure()
     
@@ -158,13 +160,16 @@ def create_progress_chart():
     
     # Add perfect score reference line
     fig.add_hline(y=100, line_dash="dash", line_color="green", opacity=0.3)
+    # Add 50% reference line
+    fig.add_hline(y=50, line_dash="dash", line_color="orange", opacity=0.3)
     
     fig.update_layout(
-        title="Your Progress Over Time",
+        title="Your Accuracy Progress",
         xaxis_title="Question Number",
         yaxis_title="Accuracy (%)",
         height=300,
-        showlegend=False
+        showlegend=False,
+        yaxis=dict(range=[0, 100])  # Always show 0-100% scale
     )
     
     return fig
@@ -175,15 +180,23 @@ def create_score_gauge():
     total_questions = st.session_state.total_questions
     accuracy = (final_score / total_questions) * 100 if total_questions > 0 else 0
     
+    # Determine color based on performance
+    if accuracy >= 80:
+        gauge_color = "green"
+    elif accuracy >= 60:
+        gauge_color = "orange"
+    else:
+        gauge_color = "red"
+    
     fig = go.Figure(go.Indicator(
         mode = "gauge+number+delta",
         value = accuracy,
         domain = {'x': [0, 1], 'y': [0, 1]},
         title = {'text': f"Final Score: {final_score}/{total_questions}"},
-        delta = {'reference': 50},  # Reference line at 50%
+        delta = {'reference': 50},
         gauge = {
             'axis': {'range': [None, 100]},
-            'bar': {'color': "darkblue"},
+            'bar': {'color': gauge_color},
             'steps': [
                 {'range': [0, 50], 'color': "lightgray"},
                 {'range': [50, 80], 'color': "gray"},
@@ -197,10 +210,62 @@ def create_score_gauge():
     fig.update_layout(height=300)
     return fig
 
+def update_high_scores():
+    """Update high scores with current game result"""
+    final_score = st.session_state.score
+    total_questions = st.session_state.total_questions
+    accuracy = (final_score / total_questions) * 100
+    
+    # Add current score to high scores
+    st.session_state.high_scores.append({
+        'score': final_score,
+        'total': total_questions,
+        'accuracy': accuracy,
+        'timestamp': pd.Timestamp.now().strftime("%Y-%m-%d %H:%M")
+    })
+    
+    # Sort by accuracy (descending) and keep top 5
+    st.session_state.high_scores.sort(key=lambda x: x['accuracy'], reverse=True)
+    st.session_state.high_scores = st.session_state.high_scores[:5]
+
+def create_high_scores_chart():
+    """Create a bar chart of high scores"""
+    if not st.session_state.high_scores:
+        return None
+    
+    # Prepare data for plotting
+    scores_df = pd.DataFrame(st.session_state.high_scores)
+    scores_df['label'] = [f"Game {i+1}" for i in range(len(scores_df))]
+    
+    fig = px.bar(
+        scores_df,
+        x='label',
+        y='accuracy',
+        title="🏆 High Scores History",
+        labels={'accuracy': 'Accuracy (%)', 'label': 'Game'},
+        color='accuracy',
+        color_continuous_scale='Viridis'
+    )
+    
+    fig.update_layout(
+        height=300,
+        showlegend=False,
+        yaxis=dict(range=[0, 100])
+    )
+    
+    # Add score labels on bars
+    fig.update_traces(
+        texttemplate='%{y:.1f}%',
+        textposition='outside'
+    )
+    
+    return fig
+
 def check_game_complete():
     """Check if the 10-question game is complete"""
     if st.session_state.total_questions >= 10:
         st.session_state.game_complete = True
+        update_high_scores()
 
 # Main app - using wider layout
 st.title("🚗 Pick the Safer Road")
@@ -212,7 +277,7 @@ st.markdown("---")
 st.header("🎮 The Game")
 
 # Show game progress
-if st.session_state.total_questions > 0:
+if st.session_state.total_questions > 0 and not st.session_state.game_complete:
     progress = st.session_state.total_questions / 10
     st.progress(progress, text=f"Progress: {st.session_state.total_questions}/10 questions")
 
@@ -224,9 +289,28 @@ if st.session_state.game_complete:
     # Show final results
     col1, col2 = st.columns(2)
     with col1:
-        st.plotly_chart(create_score_gauge(), use_container_width=True)
+        # Use unique key to avoid duplicate element error
+        st.plotly_chart(create_score_gauge(), use_container_width=True, key="final_gauge")
     with col2:
-        st.plotly_chart(create_progress_chart(), use_container_width=True)
+        st.plotly_chart(create_progress_chart(), use_container_width=True, key="final_progress")
+    
+    # Show high scores
+    st.subheader("🏆 High Scores")
+    if st.session_state.high_scores:
+        col1, col2 = st.columns(2)
+        with col1:
+            # Display high scores table
+            scores_df = pd.DataFrame(st.session_state.high_scores)
+            st.dataframe(
+                scores_df[['score', 'total', 'accuracy', 'timestamp']].rename(
+                    columns={'score': 'Correct', 'total': 'Total', 'accuracy': 'Accuracy%', 'timestamp': 'Date'}
+                ),
+                use_container_width=True
+            )
+        with col2:
+            st.plotly_chart(create_high_scores_chart(), use_container_width=True, key="high_scores_chart")
+    else:
+        st.info("Play more games to build your high scores history!")
     
     # Reset button
     if st.button("🔄 Play Again", type="primary", use_container_width=True):
@@ -327,11 +411,19 @@ if st.session_state.total_questions > 0:
     with col3:
         st.metric("Accuracy", f"{accuracy:.1f}%")
     with col4:
-        st.metric("Questions Left", f"{10 - st.session_state.total_questions}")
+        remaining = 10 - st.session_state.total_questions
+        st.metric("Questions Left", f"{remaining}" if not st.session_state.game_complete else "Complete!")
     
-    # Progress chart (only show if we have history)
-    if len(st.session_state.game_history) > 1:
-        st.plotly_chart(create_progress_chart(), use_container_width=True)
+    # Progress chart (only show if we have history and game not complete)
+    if len(st.session_state.game_history) > 1 and not st.session_state.game_complete:
+        # Use unique key for each chart instance
+        st.plotly_chart(create_progress_chart(), use_container_width=True, key="progress_chart")
+    
+    # Show high scores if we have any (even during game)
+    if st.session_state.high_scores and not st.session_state.game_complete:
+        st.subheader("🏆 Your Best Scores")
+        best_score = max([score['accuracy'] for score in st.session_state.high_scores])
+        st.metric("Personal Best", f"{best_score:.1f}%")
 else:
     st.write("Play the game to see your score!")
 
