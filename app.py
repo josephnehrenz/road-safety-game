@@ -4,11 +4,11 @@ import numpy as np
 from catboost import CatBoostRegressor
 import random
 
-# Page configuration
+# Page configuration - WIDER LAYOUT
 st.set_page_config(
     page_title="Road Safety Game",
     page_icon="🚗",
-    layout="centered"
+    layout="wide"  # Changed from "centered" to "wide"
 )
 
 # Load model
@@ -79,15 +79,15 @@ def display_road_card(road, road_name):
     with st.container():
         st.subheader(f"{road_name}")
         
-        # Main safety factors
-        col1, col2 = st.columns(2)
+        # Main safety factors - better layout
+        col1, col2, col3 = st.columns(3)
         with col1:
             st.metric("Road Type", road['road_type'].title())
             st.metric("Lanes", road['num_lanes'])
-            st.metric("Curvature", f"{road['curvature']:.2f}")
-        
         with col2:
+            st.metric("Curvature", f"{road['curvature']:.2f}")
             st.metric("Speed Limit", f"{road['speed_limit']} mph")
+        with col3:
             st.metric("Lighting", road['lighting'].title())
             st.metric("Weather", road['weather'].title())
         
@@ -100,7 +100,35 @@ def display_road_card(road, road_name):
             st.write(f"**School Season:** {'✅ Yes' if road['school_season'] else '❌ No'}")
             st.write(f"**Past Accidents:** {road['num_reported_accidents']}")
 
-# Main app
+def show_risk_scores():
+    """Display the actual risk scores - THIS WAS MISSING!"""
+    risk1 = st.session_state.current_roads['risk1']
+    risk2 = st.session_state.current_roads['risk2']
+    st.info(f"**Actual Risk Scores:** Road 1: {risk1:.3f} | Road 2: {risk2:.3f}")
+    
+    # Show which factors mattered most
+    st.write("**Key factors in this comparison:**")
+    factors = []
+    road1 = st.session_state.current_roads['road1']
+    road2 = st.session_state.current_roads['road2']
+    
+    # Compare key features
+    if road1['speed_limit'] != road2['speed_limit']:
+        factors.append(f"Speed limit ({road1['speed_limit']} vs {road2['speed_limit']} mph)")
+    if road1['lighting'] != road2['lighting']:
+        factors.append(f"Lighting ({road1['lighting']} vs {road2['lighting']})")
+    if road1['weather'] != road2['weather']:
+        factors.append(f"Weather ({road1['weather']} vs {road2['weather']})")
+    if road1['curvature'] != road2['curvature']:
+        factors.append(f"Curvature ({road1['curvature']:.2f} vs {road2['curvature']:.2f})")
+    if road1['road_type'] != road2['road_type']:
+        factors.append(f"Road type ({road1['road_type']} vs {road2['road_type']})")
+    
+    if factors:
+        for factor in factors[:4]:  # Show top 4 factors
+            st.write(f"• {factor}")
+
+# Main app - using wider layout
 st.title("🚗 Pick the Safer Road")
 st.markdown("### Test your intuition about road safety!")
 st.markdown("Compare two road scenarios and choose which one you think has lower accident risk.")
@@ -110,7 +138,7 @@ st.markdown("---")
 st.header("🎮 The Game")
 
 # Generate new roads button
-if st.button("🎲 Generate New Road Scenarios", type="primary") or st.session_state.current_roads is None:
+if st.button("🎲 Generate New Road Scenarios", type="primary", use_container_width=True) or st.session_state.current_roads is None:
     road1 = generate_random_road()
     road2 = generate_random_road()
     
@@ -128,7 +156,7 @@ if st.session_state.current_roads:
     road1 = st.session_state.current_roads['road1']
     road2 = st.session_state.current_roads['road2']
     
-    # Display roads side by side
+    # Display roads side by side - using wider columns
     col1, col2 = st.columns(2)
     
     with col1:
@@ -141,8 +169,8 @@ if st.session_state.current_roads:
     st.subheader("🤔 Which road is safer?")
     st.write("*(Lower risk score = safer road)*")
     
-    # Choice buttons
-    col1, col2, col3 = st.columns(3)
+    # Choice buttons - wider layout
+    col1, col2, col3 = st.columns([1, 1, 1])
     
     with col1:
         if st.button("🚗 Choose Road 1", use_container_width=True, type="secondary"):
@@ -184,48 +212,24 @@ if st.session_state.current_roads:
             st.session_state.current_roads = None
             st.rerun()
 
-def show_risk_scores():
-    """Display the actual risk scores"""
-    risk1 = st.session_state.current_roads['risk1']
-    risk2 = st.session_state.current_roads['risk2']
-    st.info(f"**Actual Risk Scores:** Road 1: {risk1:.3f} | Road 2: {risk2:.3f}")
-    
-    # Show which factors mattered most
-    st.write("**Key factors in this comparison:**")
-    factors = []
-    road1 = st.session_state.current_roads['road1']
-    road2 = st.session_state.current_roads['road2']
-    
-    # Compare key features
-    if road1['speed_limit'] != road2['speed_limit']:
-        factors.append(f"Speed limit ({road1['speed_limit']} vs {road2['speed_limit']} mph)")
-    if road1['lighting'] != road2['lighting']:
-        factors.append(f"Lighting ({road1['lighting']} vs {road2['lighting']})")
-    if road1['weather'] != road2['weather']:
-        factors.append(f"Weather ({road1['weather']} vs {road2['weather']})")
-    if road1['curvature'] != road2['curvature']:
-        factors.append(f"Curvature ({road1['curvature']:.2f} vs {road2['curvature']:.2f})")
-    
-    if factors:
-        for factor in factors[:3]:  # Show top 3 factors
-            st.write(f"• {factor}")
-
 # Score display
 st.markdown("---")
 st.header("📊 Your Score")
 if st.session_state.total_questions > 0:
     accuracy = (st.session_state.score / st.session_state.total_questions) * 100
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Correct Guesses", f"{st.session_state.score}/{st.session_state.total_questions}")
+        st.metric("Games Played", st.session_state.total_questions)
     with col2:
+        st.metric("Correct Guesses", st.session_state.score)
+    with col3:
         st.metric("Accuracy", f"{accuracy:.1f}%")
 else:
     st.write("Play the game to see your score!")
 
 # Reset score button
 if st.session_state.total_questions > 0:
-    if st.button("🔄 Reset Score"):
+    if st.button("🔄 Reset Score", use_container_width=True):
         st.session_state.score = 0
         st.session_state.total_questions = 0
         st.rerun()
@@ -252,7 +256,7 @@ Based on the model's feature importance, here's what most affects road safety:
 # Footer
 st.markdown("---")
 st.markdown(
-    "Built with ❤️ using CatBoost | "
+    "Built using CatBoost | "
     "Data from [Kaggle Playground Series](https://www.kaggle.com/competitions/playground-series-s5e10) | "
     "Part of the Stack Overflow Code Scientist Challenge"
 )
