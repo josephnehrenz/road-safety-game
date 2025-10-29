@@ -110,11 +110,9 @@ def display_road_card(road, road_name):
             st.metric("Weather", road['weather'].title())
         
         st.markdown("---")
-
-        # SUBHEADING
-        st.markdown("### 📋 Additional Details")
+        st.write("**Additional Details:**")
         
-        # ALL ROAD DETAILS - Clean single section without subheadings
+        # Additional Details
         detail_col1, detail_col2 = st.columns(2)
         
         with detail_col1:
@@ -612,6 +610,7 @@ st.markdown(
     "Data from [Kaggle Playground Series](https://www.kaggle.com/competitions/playground-series-s5e10) | "
     "Part of the Stack Overflow Code Scientist Challenge"
 )
+
 
 
 
