@@ -110,6 +110,9 @@ def display_road_card(road, road_name):
             st.metric("Weather", road['weather'].title())
         
         st.markdown("---")
+
+        # SUBHEADING
+        st.subheader("📋 Additional Details")
         
         # ALL ROAD DETAILS - Clean single section without subheadings
         detail_col1, detail_col2 = st.columns(2)
@@ -452,7 +455,7 @@ if st.session_state.game_complete:
 
 # Generate new roads button (only if game not complete) - CHANGED TO BLUE
 if not st.session_state.game_complete:
-    if st.button("🎲 Generate New Road Scenarios", type="primary", use_container_width=True, 
+    if st.button("🎲 Generate New Road Scenarios", type="secondary", use_container_width=True, 
                 help="Click to get two new random road scenarios to compare") or st.session_state.current_roads is None:
         road1 = generate_random_road()
         road2 = generate_random_road()
@@ -609,3 +612,4 @@ st.markdown(
     "Data from [Kaggle Playground Series](https://www.kaggle.com/competitions/playground-series-s5e10) | "
     "Part of the Stack Overflow Code Scientist Challenge"
 )
+
