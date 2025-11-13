@@ -1,10 +1,10 @@
-# 🚗 Road Safety Game - Pick the Safer Road
+# Road Safety Game - Pick the Safer Road
 
 An interactive web application that tests your intuition about road safety using machine learning. Built for the Kaggle & Stack Overflow Code Scientist Challenge.
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://road-safety-game.streamlit.app/)
 
-## 🎮 About the Game
+## About the Game
 
 Test your road safety knowledge! The app presents you with two random road scenarios and challenges you to pick which one is safer. After you guess, it reveals the actual risk scores predicted by a CatBoost machine learning model trained on real road safety data.
 
@@ -14,7 +14,7 @@ Test your road safety knowledge! The app presents you with two random road scena
 
 Which would you choose?
 
-## 🛠️ Technical Details
+## Technical Details
 
 ### Machine Learning
 - **Model**: CatBoost Regressor
@@ -27,19 +27,19 @@ Which would you choose?
 - **Hosting**: Streamlit Community Cloud
 - **Interactive Elements**: Real-time scoring, random scenario generation, educational insights
 
-## 📊 Model Performance
+## Model Performance
 
 The CatBoost model was trained on 517,754 road segments with the following results:
 - **Validation RMSE**: 0.0563
 - **Cross-validation RMSE**: 0.0561 ± 0.0005
 - **Key Insights**: Speed limit and lighting conditions are the most important safety factors
 
-## 🚀 Live Demo
+## Live Demo
 
 Try the live app here:  
-**[👉 https://road-safety-game.streamlit.app](https://road-safety-game.streamlit.app)**
+**[https://road-safety-game.streamlit.app](https://road-safety-game.streamlit.app)**
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 road-safety-game/
@@ -49,14 +49,14 @@ road-safety-game/
 └── README.md               # This file
 ```
 
-## 🏆 Challenge Information
+## Challenge Information
 
 This project is part of the **Kaggle & Stack Overflow Code Scientist Challenge**:
 - **Kaggle Challenge**: Predict roadway accidents using machine learning
 - **Stack Overflow Challenge**: Build an interactive web application to explore the data
 - **Special Badge**: Complete both challenges to earn the "Code Scientist" badge
 
-## 🔧 Installation & Local Development
+## Installation & Local Development
 
 If you want to run this locally:
 
@@ -72,7 +72,7 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-## 📈 Feature Importance
+## Feature Importance
 
 The model identified these as the most important safety factors:
 1. **Speed Limit** (37.6%) - Higher speeds dramatically increase risk
@@ -80,11 +80,11 @@ The model identified these as the most important safety factors:
 3. **Road Curvature** (14.4%) - Sharper curves = more dangerous
 4. **Weather Conditions** (9.3%) - Rain, fog, snow increase accident risk
 
-## 🤝 Contributing
+## Contributing
 
 Feel free to fork this project and submit pull requests for any improvements!
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
