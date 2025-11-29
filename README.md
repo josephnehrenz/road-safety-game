@@ -3,6 +3,7 @@
 An interactive web application that tests your intuition about road safety using machine learning. Built for the Kaggle & Stack Overflow Code Scientist Challenge.
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://road-safety-game.streamlit.app/)
+[![Kaggle](https://kaggle.com/static/images/open-in-kaggle.svg)](https://www.kaggle.com/code/josephnehrenz/s5e10-predicting-road-accident-risk-w-web-app)
 
 ## About the Game
 
